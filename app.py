@@ -42,7 +42,7 @@ transform = transforms.Compose([
     transforms.ToTensor(), normalize]
 )
 
-print('Model loaded. Check http://127.0.0.1:5000/')
+print('Model loaded. Check http://127.0.0.1:423/')
 
 
 # Model saved with Keras model.save()
@@ -56,7 +56,7 @@ print('Model loaded. Check http://127.0.0.1:5000/')
 
 def model_predict(img, model):
     # 对图像进行归一化
-    img_p = transform(img)
+    img_p = transform(img.convert('RGB'))
     print(img_p.shape)
     
     # 增加一个维度
@@ -83,24 +83,19 @@ def predict():
 
         # Make prediction
         preds = model_predict(img, model)
-        
 
-        with open('imagenet_classes.txt') as f:
+        base_dir = os.path.dirname(__file__)
+        # resp = make_response(open(os.path.join(base_dir, "imagenet_classes.txt")).read())
+
+        with open(os.path.join(base_dir, "imagenet_classes.txt")) as f:
             classes = [line.strip() for line in f.readlines()]
         
         _, indices = torch.sort(preds, descending=True)
         percentage = torch.nn.functional.softmax(preds, dim=1)[0] * 100
-        prediction = [[classes[idx], percentage[idx].item()] for idx in indices[0][:5]]
-        print(prediction)
-        
-        score = []
-        label = []
-        for i in prediction:
-            print('Prediciton-> {:<25} Accuracy-> ({:.2f}%)'.format(i[0][:], i[1]))
-            score.append(i[1])
-            label.append(i[0])
-        
-        print(score)
+        idx=indices[0][0]
+        prediction = classes[idx]
+        score = percentage[idx].item()
+        print(prediction,score)
         return jsonify(result=prediction, probability=score)
 
     return None
